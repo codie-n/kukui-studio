@@ -1,16 +1,16 @@
 /*
- * Multiple Choice — visual implementation of pattern A (inline-below feedback,
+ * Evidence Weighing — visual implementation of pattern A (inline-below feedback,
  * space reserved from initial render, opacity-only fade). Layout-stable:
  * borders are constant 2 px; only color and opacity change between states.
  */
 
-.kukui-mc {
+.kukui-ew {
   display: flex;
   justify-content: center;
   padding: var(--spacing-2xl, 24px);
 }
 
-.kukui-mc__card {
+.kukui-ew__card {
   width: 100%;
   max-width: 720px;
   background: var(--color-surface, #ffffff);
@@ -20,6 +20,33 @@
   box-shadow: var(--shadow-card);
   overflow: hidden;
   --kukui-card-pad: var(--spacing-3xl, 28px);
+}
+
+.kukui-ew__evidence-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 12px);
+}
+
+.kukui-ew__evidence {
+  padding: var(--spacing-lg, 16px);
+  background: var(--color-surface, #ffffff);
+  border: 2px solid var(--color-border, #d1d7df);
+  border-radius: var(--radius-md, 8px);
+}
+
+.kukui-ew__ratings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg, 16px);
+  margin-top: var(--spacing-md, 12px);
+}
+
+.kukui-ew__rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
 }
 
 .kukui-mc__answers {
@@ -87,18 +114,17 @@
   border-style: solid;
 }
 
-.kukui-mc__answer-text {
-  flex: 1 1 auto;
-  white-space: normal;
+.kukui-ew__feedback {
+  margin-top: var(--spacing-md, 12px);
+  font-size: var(--font-size-meta, 13px);
+  color: var(--color-text-secondary, #49515b);
 }
 
-.kukui-mc__answer-icon {
-  flex: 0 0 auto;
+.kukui-ew__solution {
+  margin-top: var(--spacing-sm, 8px);
+  font-size: var(--font-size-meta, 13px);
   font-weight: 700;
-  font-size: 18px;
-  width: 24px;
-  text-align: center;
-  color: inherit;
+  color: var(--color-success, #2e6e41);
 }
 
 /*
@@ -118,28 +144,7 @@
   opacity: 1;
 }
 
-/* Tip row — same pattern A as the feedback row: rendered whenever the
- * answer has a tip, space reserved from initial render, opacity-only
- * reveal on submit so neighbours never reflow. */
-.kukui-mc__tip {
-  font-size: var(--font-size-meta, 13px);
-  color: var(--color-text-secondary, #49515b);
-  padding: var(--spacing-xs, 4px) var(--spacing-lg, 16px) 0;
-  font-style: italic;
-  opacity: 0;
-  transition: opacity 200ms ease;
-}
-
-.kukui-mc__tip.is-visible {
-  opacity: 1;
-}
-
-.kukui-mc__tip-label {
-  font-weight: 700;
-  font-style: normal;
-}
-
-.kukui-mc__actions {
+.kukui-ew__actions {
   margin-top: var(--spacing-xl, 20px);
   display: flex;
   flex-wrap: wrap;
@@ -147,7 +152,7 @@
   gap: var(--spacing-md, 12px);
 }
 
-.kukui-mc__primary {
+.kukui-ew__primary {
   min-height: 44px;
   padding: 10px 20px;
   background: var(--color-primary, #4a7a5f);
@@ -158,16 +163,16 @@
   font-weight: 700;
 }
 
-.kukui-mc__primary:hover:not(:disabled) {
+.kukui-ew__primary:hover:not(:disabled) {
   background: var(--color-primary-hover, #3f6b52);
 }
 
-.kukui-mc__primary:disabled {
+.kukui-ew__primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.kukui-mc__secondary {
+.kukui-ew__secondary {
   min-height: 44px;
   padding: 10px 20px;
   background: transparent;
@@ -178,17 +183,18 @@
   font-weight: 700;
 }
 
-.kukui-mc__score {
+.kukui-ew__score {
   font-size: var(--font-size-prompt, 16px);
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
-.kukui-mc__band {
+.kukui-ew__band {
   font-weight: 400;
   color: var(--color-text-secondary);
 }
 
+/*
 @media (prefers-reduced-motion: reduce) {
   .kukui-mc__answer,
   .kukui-mc__feedback,
@@ -196,3 +202,4 @@
     transition: none;
   }
 }
+*/

@@ -97,8 +97,8 @@ export function Component({
   const banner = state.stage === "submitted" ? bandMessage(scoring.bands, pct) : null;
 
   return (
-    <div className="kukui-mc">
-      <article className="kukui-mc__card" aria-labelledby={headingId}>
+    <div className="kukui-ew">
+      <article className="kukui-ew__card" aria-labelledby={headingId}>
         <ActivityHeader
           title={config.title}
           titleId={headingId}
@@ -128,7 +128,7 @@ export function Component({
                   aria-labelledby={`evidence-${headingId}-${index}`}
                 >
                   {config.ratings.map((rating) => (
-                    <label key={rating.id}>
+                    <label key={rating.id} className="kukui-ew__rating">
                       <input
                         type="radio"
                         name={`evidence-${headingId}-${index}`}
@@ -158,11 +158,11 @@ export function Component({
         })}
         </div>
 
-        <div className="kukui-mc__actions">
+        <div className="kukui-ew__actions">
           {state.stage === "answering" ? (
             <button
               type="button"
-              className="kukui-mc__primary"
+              className="kukui-ew__primary"
               disabled={Object.keys(state.ratings).length === 0}
               onClick={submit}
             >
@@ -170,19 +170,19 @@ export function Component({
             </button>
           ) : (
             <>
-              <output className="kukui-mc__score">
+              <output className="kukui-ew__score">
                 {score.raw} / {score.max}
-                {banner ? <span className="kukui-mc__band"> — {banner}</span> : null}
+                {banner ? <span className="kukui-ew__band"> — {banner}</span> : null}
               </output>
               {scoring.enableRetry ? (
-                <button type="button" className="kukui-mc__secondary" onClick={tryAgain}>
+                <button type="button" className="kukui-ew__secondary" onClick={tryAgain}>
                   {tryAgainLabel}
                 </button>
               ) : null}
               {scoring.enableSolutionsButton && !solutionsRevealed ? (
                 <button
                   type="button"
-                  className="kukui-mc__secondary"
+                  className="kukui-ew__secondary"
                   onClick={() => setSolutionsRevealed(true)}
                 >
                   {solutionLabel}
