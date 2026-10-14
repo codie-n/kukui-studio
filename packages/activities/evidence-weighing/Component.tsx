@@ -5,7 +5,6 @@ import {
   bandMessage,
   percentage,
   resolveScoring,
-  scoreSelection,
 } from "@kukui/core/scoring";
 import { ActivityHeader, SafeHtml, htmlToText } from "@kukui/core";
 import "./Component.css";
@@ -57,13 +56,20 @@ export function Component({
     }));
   };
 
+  const correctCount = config.evidence.filter(
+    (item, index) => state.ratings[index] === item.expectedRating,
+  ).length;
+
+  const score = {
+    raw: correctCount,
+    max: config.evidence.length,
+  };
+
   const scoring = useMemo(() => resolveScoring(config, { mode: "points" }), [config]);
 
   const submit = () => {
-    if (state.selected.length === 0) return;
-    const score = scoreSelection({
-      selectedIndices: new Set(state.selected),
-    });
+    if (Object.keys(state.ratings).length !== config.evidence.length) return;
+
     // Build the next state first so the suspend payload carries the same
     // attempts increment that setState applies (no stale spread).
     const next: State = { ...state, stage: "submitted", attempts: state.attempts + 1 };
@@ -85,14 +91,6 @@ export function Component({
   const checkLabel = ui.checkAnswerButton ?? "Check";
   const solutionLabel = ui.showSolutionButton ?? "Show solution";
   const tryAgainLabel = ui.tryAgainButton ?? "Try again";
-
-  const score = useMemo(
-    () =>
-      scoreSelection({
-        selectedIndices: new Set(state.selected),
-      }),
-    [state.selected],
-  );
 
   const pct = state.stage === "submitted" ? percentage(score) : 0;
   const banner = state.stage === "submitted" ? bandMessage(scoring.bands, pct) : null;
