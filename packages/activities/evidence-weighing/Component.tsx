@@ -6,7 +6,7 @@ import {
   percentage,
   resolveScoring,
 } from "@kukui/core/scoring";
-import { ActivityHeader, SafeHtml, htmlToText } from "@kukui/core";
+import { ActivityHeader, SafeHtml } from "@kukui/core";
 import "./Component.css";
 
 
@@ -63,6 +63,7 @@ export function Component({
   const score = {
     raw: correctCount,
     max: config.evidence.length,
+    success: correctCount === config.evidence.length,
   };
 
   const scoring = useMemo(() => resolveScoring(config, { mode: "points" }), [config]);
@@ -162,7 +163,7 @@ export function Component({
             <button
               type="button"
               className="kukui-mc__primary"
-              disabled={state.selected.length === 0}
+              disabled={Object.keys(state.ratings).length === 0}
               onClick={submit}
             >
               {checkLabel}
