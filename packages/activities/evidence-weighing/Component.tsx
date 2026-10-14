@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import type { MultipleChoiceConfig } from "@kukui/schemas";
+import type { EvidenceWeighingConfig } from "@kukui/schemas";
 import type { ActivityProps } from "@kukui/core/types";
 import {
   bandMessage,
@@ -10,39 +10,14 @@ import {
 import { ActivityHeader, SafeHtml, htmlToText } from "@kukui/core";
 import "./Component.css";
 
-type Stage = "answering" | "submitted";
 
 type State = {
-  stage: Stage;
-  /** Indices into the ORIGINAL config.answers array (stable identity). */
-  selected: number[];
+  stage: "answering" | "submitted";
+  ratings: Record<number, string>;
   attempts: number;
 };
 
-const initialState: State = { stage: "answering", selected: [], attempts: 0 };
-
-/** Tiny seeded PRNG (mulberry32) — stable shuffle across remounts. */
-function rng(seed: number): () => number {
-  let t = seed >>> 0;
-  return () => {
-    t = (t + 0x6d2b79f5) >>> 0;
-    let r = Math.imul(t ^ (t >>> 15), 1 | t);
-    r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
-    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function shuffleIndices(n: number, seed: number): number[] {
-  const out = Array.from({ length: n }, (_, i) => i);
-  const rand = rng(seed);
-  for (let i = out.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(rand() * (i + 1));
-    const tmp = out[i] as number;
-    out[i] = out[j] as number;
-    out[j] = tmp;
-  }
-  return out;
-}
+const initialState: State = { stage: "answering", ratings: {}, attempts: 0 };
 
 export function Component({
   config,
@@ -50,7 +25,7 @@ export function Component({
   onPersist,
   suspendData,
   headingLevel = 1,
-}: ActivityProps<MultipleChoiceConfig>) {
+}: ActivityProps<EvidenceWeighingConfig>) {
   const [state, setState] = useState<State>(() => parseSuspend(suspendData) ?? initialState);
   const headingId = useId();
 
@@ -65,53 +40,29 @@ export function Component({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
 
-  const correctIndices = useMemo(
-    () => new Set(config.answers.map((a, i) => (a.correct ? i : -1)).filter((i) => i >= 0)),
-    [config.answers],
-  );
-  const isMulti = correctIndices.size > 1;
-
-  // Display order of answer indices into config.answers. Selection still
-  // tracks the original indices so scoring is by stable identity.
-  // Keyed on `config` identity (not answers.length): the shuffle regenerates
-  // whenever the activity config changes, which is correct — the state-reset
-  // effect above also fires on config change, so order and selection reset
-  // together. Stable across re-renders of the same config object.
-  const displayOrder = useMemo<number[]>(() => {
-    if (!config.behaviour?.randomAnswers) {
-      return config.answers.map((_, i) => i);
-    }
-    // Per-mount seed: stable across re-renders, varies across mounts.
-    const seed = Math.floor(Math.random() * 0xffffffff) >>> 0;
-    return shuffleIndices(config.answers.length, seed);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config]);
-
   useEffect(() => {
     if (!onPersist) return;
     onPersist(JSON.stringify(state));
   }, [state, onPersist]);
 
-  const toggle = (idx: number) => {
+  const selectRating = (index: number, ratingID: string) => {
     if (state.stage !== "answering") return;
-    setState((s) => {
-      const has = s.selected.includes(idx);
-      if (isMulti) {
-        return { ...s, selected: has ? s.selected.filter((i) => i !== idx) : [...s.selected, idx] };
-      }
-      return { ...s, selected: has ? [] : [idx] };
-    });
+
+    setState((s) => ({
+      ...s,
+      ratings: {
+        ...s.ratings,
+        [index]: ratingID,
+      },
+    }));
   };
 
   const scoring = useMemo(() => resolveScoring(config, { mode: "points" }), [config]);
-  const isSinglePoint = scoring.mode === "all-or-nothing";
 
   const submit = () => {
     if (state.selected.length === 0) return;
     const score = scoreSelection({
       selectedIndices: new Set(state.selected),
-      correctIndices,
-      singlePoint: isSinglePoint,
     });
     // Build the next state first so the suspend payload carries the same
     // attempts increment that setState applies (no stale spread).
@@ -139,10 +90,8 @@ export function Component({
     () =>
       scoreSelection({
         selectedIndices: new Set(state.selected),
-        correctIndices,
-        singlePoint: isSinglePoint,
       }),
-    [state.selected, correctIndices, isSinglePoint],
+    [state.selected],
   );
 
   const pct = state.stage === "submitted" ? percentage(score) : 0;
@@ -156,7 +105,7 @@ export function Component({
           titleId={headingId}
           headingLevel={headingLevel}
           variant={config.appearance?.header ?? "full"}
-          prompt={<SafeHtml html={config.question} />}
+          prompt={<SafeHtml html={config.claim} />}
         />
         {/* Drop the radiogroup ARIA role — implementing it correctly requires
             roving tabindex + arrow-key navigation, which we don't yet do.
@@ -199,7 +148,7 @@ export function Component({
                   ]
                     .filter(Boolean)
                     .join(" ")}
-                  onClick={() => toggle(i)}
+                  onClick={() => selectRating(index, rating.id)}
                 >
                   <SafeHtml as="span" className="kukui-mc__answer-text" html={a.text} />
                   <span className="kukui-mc__answer-icon" aria-hidden="true">
