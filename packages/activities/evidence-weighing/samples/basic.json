@@ -1,32 +1,46 @@
 {
   "version": "1.0",
-  "title": "Capital of Hawaii",
-  "question": "<p>What is the capital of Hawaii?</p>",
-  "answers": [
+  "title": "Evaluating Evidence for Influenza",
+  "claim": "A patient has influenza.",
+  "ratings": [
     {
-      "text": "Honolulu",
-      "correct": true,
-      "tip": "It's the largest city in the state.",
-      "feedback": "Correct! Honolulu is the capital and largest city of Hawaiʻi, located on the island of Oʻahu."
+      "id": "weak",
+      "label": "Weak"
     },
     {
-      "text": "Hilo",
-      "correct": false,
-      "tip": "Hilo is the second-largest, but on a different island.",
-      "feedback": "Hilo is on the Big Island (Hawaiʻi Island), not the capital."
+      "id": "moderate",
+      "label": "Moderate"
     },
     {
-      "text": "Kailua",
-      "correct": false,
-      "tip": "There are several towns named Kailua across the islands.",
-      "feedback": "Kailua is a town — there's one on Oʻahu and one on the Big Island, but neither is the capital."
+      "id": "strong",
+      "label": "Strong"
+    }
+  ],
+  "evidence": [
+    {
+      "text": "The patient has a fever, cough, and muscle aches.",
+      "expectedRating": "moderate",
+      "feedback": "These symptoms are consistent with influenza, but several other illnesses can cause similar symptoms."
+    },
+    {
+      "text": "The patient has a positive influenza PCR test.",
+      "expectedRating": "strong",
+      "feedback": "A positive molecular test provides strong evidence of influenza infection."
+    },
+    {
+      "text": "The patient reports feeling tired after a long day at work.",
+      "expectedRating": "weak",
+      "feedback": "Fatigue alone is nonspecific and provides little evidence for influenza."
+    },
+    {
+      "text": "Several coworkers have recently been diagnosed with influenza.",
+      "expectedRating": "moderate",
+      "feedback": "Recent exposure increases the likelihood of influenza but does not confirm infection."
     }
   ],
   "behaviour": {
     "enableRetry": true,
-    "enableSolutionsButton": true,
-    "singlePoint": false,
-    "randomAnswers": false
+    "enableSolutionsButton": true
   },
   "ui": {
     "checkAnswerButton": "Check",
@@ -34,8 +48,8 @@
     "tryAgainButton": "Try again"
   },
   "overallFeedback": [
-    { "from": 0, "to": 50, "message": "Worth reviewing the islands and their main cities." },
-    { "from": 51, "to": 99, "message": "Close — nice work." },
-    { "from": 100, "to": 100, "message": "Perfect score!" }
+    { "from": 0, "to": 50, "message": "Review how strongly each finding supports the diagnosis." },
+    { "from": 51, "to": 99, "message": "Good effort! Consider which findings are more specific." },
+    { "from": 100, "to": 100, "message": "Excellent! You evaluated all the evidence correctly." }
   ]
 }
