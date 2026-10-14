@@ -108,85 +108,54 @@ export function Component({
         {/* Drop the radiogroup ARIA role — implementing it correctly requires
             roving tabindex + arrow-key navigation, which we don't yet do.
             A plain group with aria-pressed buttons gives accurate semantics. */}
-        <ul role="group" aria-label="Answer choices" className="kukui-mc__answers">
-          {displayOrder.map((i) => {
-            const a = config.answers[i];
-            if (!a) return null;
-            const selected = state.selected.includes(i);
-            const submitted = state.stage === "submitted";
-            const correct = a.correct;
-            const wrong = submitted && selected && !correct;
-            const right = submitted && selected && correct;
-            // Only after the learner presses "Show solution".
-            const reveal = showSolutions && !selected && correct;
-            const stateLabel = right
-              ? "correct"
-              : wrong
-                ? "incorrect"
-                : reveal
-                  ? "correct, not selected"
-                  : selected
-                    ? "selected"
-                    : "not selected";
+        <div className="kukui-ew__evidence-list">
+          {config.evidence.map((item, index) => {
+            const isCorrect = state.ratings[index] === item.expectedRating;
+            const expectedRating = config.ratings.find(
+              (rating) => rating.id === item.expectedRating
+            );
 
             return (
-              <li key={i} className="kukui-mc__answer-row">
-                <button
-                  type="button"
-                  aria-pressed={selected}
-                  aria-label={`${htmlToText(a.text)}, ${stateLabel}`}
-                  disabled={submitted}
-                  title={!submitted && a.tip ? a.tip : undefined}
-                  className={[
-                    "kukui-mc__answer",
-                    selected ? "is-selected" : "",
-                    right ? "is-correct" : "",
-                    wrong ? "is-incorrect" : "",
-                    reveal ? "is-reveal" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  onClick={() => selectRating(index, rating.id)}
-                >
-                  <SafeHtml as="span" className="kukui-mc__answer-text" html={a.text} />
-                  <span className="kukui-mc__answer-icon" aria-hidden="true">
-                    {right ? "✓" : wrong ? "✗" : reveal ? "○" : ""}
-                  </span>
-                </button>
-                {/* Tip row mounts whenever the answer has a tip — presence
-                    depends on config only, never on state, so the reveal is
-                    opacity-only and neighbours stay put (layout-stable). The
-                    tip becomes visible as soon as the answer is selected —
-                    both pre- and post-submit — so touch and keyboard users
-                    get it too (the `title` tooltip is a mouse-only bonus,
-                    never the sole channel). */}
-                {a.tip ? (
-                  <div
-                    className={[
-                      "kukui-mc__tip",
-                      selected ? "is-visible" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    <span className="kukui-mc__tip-label">Tip:</span> {a.tip}
-                  </div>
-                ) : null}
+              <div key={index} className="kukui-ew__evidence">
+                <p id={`evidence-${headingId}-${index}`}>
+                  {item.text}
+                </p>
+
                 <div
-                  className={[
-                    "kukui-mc__feedback",
-                    submitted && selected ? "is-visible" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  aria-live="polite"
+                  className="kukui-ew__ratings"
+                  role="group"
+                  aria-labelledby={`evidence-${headingId}-${index}`}
                 >
-                  {submitted && selected && a.feedback ? a.feedback : ""}
+                  {config.ratings.map((rating) => (
+                    <label key={rating.id}>
+                      <input
+                        type="radio"
+                        name={`evidence-${headingId}-${index}`}
+                        checked={state.ratings[index] === rating.id}
+                        disabled={state.stage === "submitted"}
+                        onChange={() => selectRating(index, rating.id)}
+                      />
+                      {rating.label}
+                    </label>
+                  ))}
                 </div>
-              </li>
+                {state.stage === "submitted" && (
+                  <div className="kukui-ew__feedback">
+                    {isCorrect && <p>Correct</p>}
+                    {!isCorrect && <p>Incorrect</p>}
+
+                    {item.feedback && <p>{item.feedback}</p>}
+                  </div>
+                )}
+                {showSolutions && (
+                  <p className="kukui-ew__solution">
+                    Expected rating: {expectedRating.label}
+                  </p>
+                )}
+            </div>
             );
-          })}
-        </ul>
+        })}
+        </div>
 
         <div className="kukui-mc__actions">
           {state.stage === "answering" ? (
@@ -230,15 +199,21 @@ function parseSuspend(s: string | undefined): State | null {
   if (!s) return null;
   try {
     const parsed = JSON.parse(s) as Partial<State>;
-    if (parsed && Array.isArray(parsed.selected) && typeof parsed.attempts === "number") {
+    if (
+      parsed &&
+      typeof parsed.ratings === "object" &&
+      parsed.ratings !== null &&
+      !Array.isArray(parsed.ratings) &&
+      typeof parsed.attempts === "number"
+    ) {
       return {
         stage: parsed.stage === "submitted" ? "submitted" : "answering",
-        selected: parsed.selected.filter((n): n is number => typeof n === "number"),
+        ratings: parsed.ratings,
         attempts: parsed.attempts,
       };
     }
   } catch {
-    /* noop */
+    // Invalid save data
   }
   return null;
 }
