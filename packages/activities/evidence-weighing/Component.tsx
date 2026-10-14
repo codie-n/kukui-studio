@@ -150,7 +150,7 @@ export function Component({
                 )}
                 {showSolutions && (
                   <p className="kukui-ew__solution">
-                    Expected rating: {expectedRating.label}
+                    Expected rating: {expectedRating?.label}
                   </p>
                 )}
             </div>

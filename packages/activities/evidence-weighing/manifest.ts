@@ -1,6 +1,6 @@
 import { lazy, type ComponentType } from "react";
 import type { ActivityManifest } from "@kukui/activities/types";
-import { MultipleChoiceConfigSchema } from "./schema.js";
+import { EvidenceWeighingConfigSchema } from "./schema.js";
 import uiSchema from "./ui-schema.js";
 import starter from "./starter.js";
 import { label, description, bloom, live } from "./meta.js";
@@ -15,9 +15,9 @@ const Component = lazy(() =>
   })),
 );
 
-export const activity: ActivityManifest<"multiple-choice"> = {
-  kind: "multiple-choice",
-  schema: MultipleChoiceConfigSchema,
+export const activity: ActivityManifest<"evidence-weighing"> = {
+  kind: "evidence-weighing",
+  schema: EvidenceWeighingConfigSchema,
   Component,
   uiSchema,
   starter,
