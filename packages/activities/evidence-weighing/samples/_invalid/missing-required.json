@@ -1,6 +1,11 @@
 {
-  "_comment": "INTENTIONALLY INVALID: required field 'answers' is missing.",
+  "_comment": "INTENTIONALLY INVALID: required field 'evidence' is missing.",
   "version": "1.0",
-  "title": "Capital of Hawaii",
-  "question": "<p>What is the capital of Hawaii?</p>"
+  "title": "Evidence Weighing",
+  "claim": "A patient has the influenza.",
+  "ratings": [
+    { "id": "weak", "label": "Weak" },
+    { "id": "moderate", "label": "Moderate" },
+    { "id": "strong", "label": "Strong" }
+  ]
 }

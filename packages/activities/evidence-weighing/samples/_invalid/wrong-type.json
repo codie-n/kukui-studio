@@ -1,10 +1,23 @@
 {
-  "_comment": "INTENTIONALLY INVALID: 'answers[0].correct' is a string instead of a boolean.",
+  "_comment": "INTENTIONALLY INVALID: 'evidence[0].expectedRating' is a number instead of a string.",
   "version": "1.0",
-  "title": "Capital of Hawaii",
-  "question": "<p>What is the capital of Hawaii?</p>",
-  "answers": [
-    { "text": "Honolulu", "correct": "yes" },
-    { "text": "Hilo", "correct": false }
+  "title": "Evidence Weighing",
+  "claim": "A patient has the influenza.",
+  "ratings": [
+    { "id": "weak", "label": "Weak" },
+    { "id": "moderate", "label": "Moderate" },
+    { "id": "strong", "label": "Strong" }
+  ],
+  "evidence": [
+    {
+      "text": "The patient has a fever, cough, and muscle aches.",
+      "expectedRating": 0,
+      "feedback": "These symptoms are consistent with influenza, but several other illnesses can cause similar symptoms."
+    },
+    {
+      "text": "The patient has a positive influenza PCR test.",
+      "expectedRating": "strong",
+      "feedback": "A positive molecular test provides strong evidence of influenza infection."
+    }
   ]
 }
