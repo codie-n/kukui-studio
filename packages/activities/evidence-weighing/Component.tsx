@@ -38,10 +38,12 @@ function initialState(config: EvidenceWeighingConfig): State {
 
 function claimScore(
   claim: EvidenceWeighingConfig["claims"][number],
-  state: ClaimState,
+  state: ClaimState | undefined,
 ) {
+  const ratings = state?.ratings ?? {};
+
   const correctCount = claim.evidence.filter(
-    (item, index) => state.ratings[index] === item.expectedRating,
+    (item, index) => ratings[index] === item.expectedRating,
   ).length;
 
   return {
@@ -73,18 +75,15 @@ export function Component({
   suspendData,
   headingLevel = 1,
 }: ActivityProps<EvidenceWeighingConfig>) {
-  const [state, setState] = useState<State>(() => parseSuspend(suspendData, config) ?? initialState(config));
-  const headingId = useId();
-
-  // Reset local state when `config` changes externally (Studio Preview edit,
-  // AI Accept, draft load, etc.). Reference equality on the `config` prop —
-  // engine context loads JSON once and never mutates the ref, so this only
-  // fires in Studio Preview. Replaces the now-removed JSON.stringify(value)
-  // remount key.
-  useEffect(() => {
+  const [savedConfig, setSavedConfig] = useState(config);
+  const [state, setState] = useState<State>(
+    () => parseSuspend(suspendData, config) ?? initialState(config),
+  );
+  if (savedConfig !== config) {
+    setSavedConfig(config);
     setState(parseSuspend(suspendData, config) ?? initialState(config));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [config]);
+  }
+  const headingId = useId();
 
   useEffect(() => {
     if (!onPersist) return;
@@ -197,7 +196,7 @@ export function Component({
             roving tabindex + arrow-key navigation, which we don't yet do.
             A plain group with aria-pressed buttons gives accurate semantics. */}
                 {config.claims.map((claim, claimIndex) => {
-          const claimState = state.claims[claimIndex]!;
+          const claimState = state.claims[claimIndex] ?? initialClaimState();
           const score = claimScore(claim, claimState);
           const submitted = claimState.stage === "submitted";
 
