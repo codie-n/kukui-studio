@@ -111,3 +111,11 @@
   font-weight: 400;
   color: var(--color-text-secondary);
 }
+
+.kukui-ew__claim {
+  padding-block: 1.5rem;
+}
+
+.kukui-ew__claim + .kukui-ew__claim {
+  border-top: 1px solid var(--kukui-border, #d1d7df);
+}

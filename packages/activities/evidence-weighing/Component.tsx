@@ -10,13 +10,61 @@ import { ActivityHeader, SafeHtml } from "@kukui/core";
 import "./Component.css";
 
 
-type State = {
+type ClaimState = {
   stage: "answering" | "submitted";
   ratings: Record<number, string>;
   attempts: number;
+  solutionsRevealed: boolean;
 };
 
-const initialState: State = { stage: "answering", ratings: {}, attempts: 0 };
+type State = {
+  claims: ClaimState[];
+}
+
+function initialClaimState(): ClaimState {
+  return {
+    stage: "answering",
+    ratings: {},
+    attempts: 0,
+    solutionsRevealed: false,
+  };
+};
+
+function initialState(config: EvidenceWeighingConfig): State {
+  return {
+    claims: config.claims.map(() => initialClaimState()),
+  };
+};
+
+function claimScore(
+  claim: EvidenceWeighingConfig["claims"][number],
+  state: ClaimState,
+) {
+  const correctCount = claim.evidence.filter(
+    (item, index) => state.ratings[index] === item.expectedRating,
+  ).length;
+
+  return {
+    raw: correctCount,
+    max: claim.evidence.length,
+    success: correctCount === claim.evidence.length,
+  };
+}
+
+function overallScore(config: EvidenceWeighingConfig, state: State) {
+  const scores = config.claims.map((claim, index) =>
+    claimScore(claim, state.claims[index]!),
+  );
+
+  const raw = scores.reduce((total, score) => total + score.raw, 0);
+  const max = scores.reduce((total, score) => total + score.max, 0);
+
+  return {
+    raw,
+    max,
+    success: raw === max,
+  };
+}
 
 export function Component({
   config,
@@ -25,7 +73,7 @@ export function Component({
   suspendData,
   headingLevel = 1,
 }: ActivityProps<EvidenceWeighingConfig>) {
-  const [state, setState] = useState<State>(() => parseSuspend(suspendData) ?? initialState);
+  const [state, setState] = useState<State>(() => parseSuspend(suspendData, config) ?? initialState(config));
   const headingId = useId();
 
   // Reset local state when `config` changes externally (Studio Preview edit,
@@ -34,8 +82,7 @@ export function Component({
   // fires in Studio Preview. Replaces the now-removed JSON.stringify(value)
   // remount key.
   useEffect(() => {
-    setState(parseSuspend(suspendData) ?? initialState);
-    setSolutionsRevealed(false);
+    setState(parseSuspend(suspendData, config) ?? initialState(config));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
 
@@ -44,57 +91,98 @@ export function Component({
     onPersist(JSON.stringify(state));
   }, [state, onPersist]);
 
-  const selectRating = (index: number, ratingID: string) => {
-    if (state.stage !== "answering") return;
+  const scoring = useMemo(
+    () => resolveScoring(config, { mode: "points" }),
+    [config],
+  )
 
-    setState((s) => ({
-      ...s,
-      ratings: {
-        ...s.ratings,
-        [index]: ratingID,
-      },
+  const selectRating = (claimIndex: number, evidenceIndex: number, ratingId: string) => {
+    setState((previous) => ({
+      claims: previous.claims.map((claimState, index) => {
+        if (index !== claimIndex || claimState.stage !== "answering") {
+          return claimState;
+        }
+
+        return {
+          ...claimState,
+          ratings: {
+            ...claimState.ratings,
+            [evidenceIndex]: ratingId,
+          },
+        };
+      }),
     }));
   };
 
-  const correctCount = config.evidence.filter(
-    (item, index) => state.ratings[index] === item.expectedRating,
-  ).length;
+  const submitClaim = (claimIndex: number) => {
+    const claim = config.claims[claimIndex];
+    const claimState = state.claims[claimIndex];
 
-  const score = {
-    raw: correctCount,
-    max: config.evidence.length,
-    success: correctCount === config.evidence.length,
-  };
+    if (!claim || !claimState || claimState.stage !== "answering") {
+      return;
+    }
 
-  const scoring = useMemo(() => resolveScoring(config, { mode: "points" }), [config]);
+    // Every evidence item must have a rating before submission.
+    const allAnswered = claim.evidence.every(
+      (_, index) => claimState.ratings[index] !== undefined,
+    );
 
-  const submit = () => {
-    if (Object.keys(state.ratings).length !== config.evidence.length) return;
+    if (!allAnswered) return;
 
-    // Build the next state first so the suspend payload carries the same
-    // attempts increment that setState applies (no stale spread).
-    const next: State = { ...state, stage: "submitted", attempts: state.attempts + 1 };
+    const next: State = {
+      claims: state.claims.map((current, index) =>
+        index === claimIndex
+          ? {
+              ...current,
+              stage: "submitted" as const,
+              attempts: current.attempts + 1,
+            }
+          : current,
+      ),
+    };
+
     setState(next);
-    onSubmit({ ...score, suspendData: JSON.stringify(next) });
+
+    // Report one overall result after all claims are submitted.
+    const allSubmitted = next.claims.every(
+      (current) => current.stage === "submitted",
+    );
+
+    if (allSubmitted) {
+      onSubmit({
+        ...overallScore(config, next),
+        suspendData: JSON.stringify(next),
+      });
+    }
   };
 
-  const tryAgain = () => {
-    setState(initialState);
-    setSolutionsRevealed(false);
+  const tryAgain = (claimIndex: number) => {
+    setState((previous) => ({
+      claims: previous.claims.map((current, index) =>
+        index === claimIndex
+          ? {
+              ...initialClaimState(),
+              attempts: current.attempts,
+            }
+          : current,
+      ),
+    }));
   };
 
-  // Solution reveal is opt-in: the learner must press the "Show solution"
-  // button after submitting. Reset on tryAgain and on config change.
-  const [solutionsRevealed, setSolutionsRevealed] = useState(false);
-  const showSolutions = state.stage === "submitted" && solutionsRevealed;
+  const revealSolutions = (claimIndex: number) => {
+    setState((previous) => ({
+      claims: previous.claims.map((current, index) =>
+        index === claimIndex && current.stage === "submitted"
+          ? { ...current, solutionsRevealed: true }
+          : current,
+      ),
+    }));
+  };
 
   const ui = config.ui ?? {};
   const checkLabel = ui.checkAnswerButton ?? "Check";
   const solutionLabel = ui.showSolutionButton ?? "Show solution";
   const tryAgainLabel = ui.tryAgainButton ?? "Try again";
-
-  const pct = state.stage === "submitted" ? percentage(score) : 0;
-  const banner = state.stage === "submitted" ? bandMessage(scoring.bands, pct) : null;
 
   return (
     <div className="kukui-ew">
@@ -104,119 +192,234 @@ export function Component({
           titleId={headingId}
           headingLevel={headingLevel}
           variant={config.appearance?.header ?? "full"}
-          prompt={<SafeHtml html={config.claim} />}
         />
         {/* Drop the radiogroup ARIA role — implementing it correctly requires
             roving tabindex + arrow-key navigation, which we don't yet do.
             A plain group with aria-pressed buttons gives accurate semantics. */}
-        <div className="kukui-ew__evidence-list">
-          {config.evidence.map((item, index) => {
-            const isCorrect = state.ratings[index] === item.expectedRating;
-            const expectedRating = config.ratings.find(
-              (rating) => rating.id === item.expectedRating
-            );
+                {config.claims.map((claim, claimIndex) => {
+          const claimState = state.claims[claimIndex]!;
+          const score = claimScore(claim, claimState);
+          const submitted = claimState.stage === "submitted";
 
-            return (
-              <div key={index} className="kukui-ew__evidence">
-                <p id={`evidence-${headingId}-${index}`}>
-                  {item.text}
-                </p>
+          const allAnswered = claim.evidence.every(
+            (_, index) => claimState.ratings[index] !== undefined,
+          );
 
-                <div
-                  className="kukui-ew__ratings"
-                  role="group"
-                  aria-labelledby={`evidence-${headingId}-${index}`}
-                >
-                  {config.ratings.map((rating) => (
-                    <label key={rating.id} className="kukui-ew__rating">
-                      <input
-                        type="radio"
-                        name={`evidence-${headingId}-${index}`}
-                        checked={state.ratings[index] === rating.id}
-                        disabled={state.stage === "submitted"}
-                        onChange={() => selectRating(index, rating.id)}
-                      />
-                      {rating.label}
-                    </label>
-                  ))}
-                </div>
-                {state.stage === "submitted" && (
-                  <div className="kukui-ew__feedback">
-                    {isCorrect && <p>Correct</p>}
-                    {!isCorrect && <p>Incorrect</p>}
+          const pct = submitted ? percentage(score) : 0;
+          const banner = submitted
+            ? bandMessage(scoring.bands, pct)
+            : null;
 
-                    {item.feedback && <p>{item.feedback}</p>}
-                  </div>
-                )}
-                {showSolutions && (
-                  <p className="kukui-ew__solution">
-                    Expected rating: {expectedRating?.label}
-                  </p>
-                )}
-            </div>
-            );
-        })}
-        </div>
+          const claimId = `${headingId}-claim-${claimIndex}`;
 
-        <div className="kukui-ew__actions">
-          {state.stage === "answering" ? (
-            <button
-              type="button"
-              className="kukui-ew__primary"
-              disabled={config.evidence.some((_, index) => state.ratings[index] === undefined)}
-              onClick={submit}
+          return (
+            <section
+              key={claimIndex}
+              className="kukui-ew__claim"
+              aria-labelledby={claimId}
             >
-              {checkLabel}
-            </button>
-          ) : (
-            <>
-              <output className="kukui-ew__score">
-                {score.raw} / {score.max}
-                {banner ? <span className="kukui-ew__band"> — {banner}</span> : null}
-              </output>
-              {scoring.enableRetry ? (
-                <button type="button" className="kukui-ew__secondary" onClick={tryAgain}>
-                  {tryAgainLabel}
-                </button>
-              ) : null}
-              {scoring.enableSolutionsButton && !solutionsRevealed ? (
-                <button
-                  type="button"
-                  className="kukui-ew__secondary"
-                  onClick={() => setSolutionsRevealed(true)}
-                >
-                  {solutionLabel}
-                </button>
-              ) : null}
-            </>
-          )}
-        </div>
+              <h2 id={claimId}>
+                Claim {claimIndex + 1}
+              </h2>
+
+              <SafeHtml html={claim.claim} />
+
+              <div className="kukui-ew__evidence-list">
+                {claim.evidence.map((item, evidenceIndex) => {
+                  const selectedRating =
+                    claimState.ratings[evidenceIndex];
+
+                  const isCorrect =
+                    selectedRating === item.expectedRating;
+
+                  const expectedRating = config.ratings.find(
+                    (rating) => rating.id === item.expectedRating,
+                  );
+
+                  const evidenceId =
+                    `${claimId}-evidence-${evidenceIndex}`;
+
+                  return (
+                    <div
+                      key={evidenceIndex}
+                      className="kukui-ew__evidence"
+                    >
+                      <p id={evidenceId}>{item.text}</p>
+
+                      <div
+                        className="kukui-ew__ratings"
+                        role="group"
+                        aria-labelledby={evidenceId}
+                      >
+                        {config.ratings.map((rating) => (
+                          <label
+                            key={rating.id}
+                            className="kukui-ew__rating"
+                          >
+                            <input
+                              type="radio"
+                              name={evidenceId}
+                              checked={selectedRating === rating.id}
+                              disabled={submitted}
+                              onChange={() =>
+                                selectRating(
+                                  claimIndex,
+                                  evidenceIndex,
+                                  rating.id,
+                                )
+                              }
+                            />
+                            {rating.label}
+                          </label>
+                        ))}
+                      </div>
+
+                      {submitted && (
+                        <div className="kukui-ew__feedback">
+                          <p>{isCorrect ? "Correct" : "Incorrect"}</p>
+                          {item.feedback && <p>{item.feedback}</p>}
+                        </div>
+                      )}
+
+                      {submitted && claimState.solutionsRevealed && (
+                        <p className="kukui-ew__solution">
+                          Expected rating: {expectedRating?.label}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="kukui-ew__actions">
+                {!submitted ? (
+                  <button
+                    type="button"
+                    className="kukui-ew__primary"
+                    disabled={!allAnswered}
+                    onClick={() => submitClaim(claimIndex)}
+                  >
+                    {checkLabel}
+                  </button>
+                ) : (
+                  <>
+                    <output className="kukui-ew__score">
+                      {score.raw} / {score.max}
+                      {banner ? (
+                        <span className="kukui-ew__band">
+                          {" — "}{banner}
+                        </span>
+                      ) : null}
+                    </output>
+
+                    {scoring.enableRetry && (
+                      <button
+                        type="button"
+                        className="kukui-ew__secondary"
+                        onClick={() => tryAgain(claimIndex)}
+                      >
+                        {tryAgainLabel}
+                      </button>
+                    )}
+
+                    {scoring.enableSolutionsButton &&
+                      !claimState.solutionsRevealed && (
+                        <button
+                          type="button"
+                          className="kukui-ew__secondary"
+                          onClick={() => revealSolutions(claimIndex)}
+                        >
+                          {solutionLabel}
+                        </button>
+                      )}
+                  </>
+                )}
+              </div>
+            </section>
+          );
+        })}
       </article>
     </div>
   );
 }
 
-function parseSuspend(s: string | undefined): State | null {
-  if (!s) return null;
+function parseSuspend(
+  suspendData: string | undefined,
+  config: EvidenceWeighingConfig,
+): State | null {
+  if (!suspendData) return null;
+
   try {
-    const parsed = JSON.parse(s) as Partial<State>;
+    const parsed: unknown = JSON.parse(suspendData);
+
     if (
-      parsed &&
-      typeof parsed.ratings === "object" &&
-      parsed.ratings !== null &&
-      !Array.isArray(parsed.ratings) &&
-      typeof parsed.attempts === "number"
+      typeof parsed !== "object" ||
+      parsed === null ||
+      !("claims" in parsed) ||
+      !Array.isArray(parsed.claims) ||
+      parsed.claims.length !== config.claims.length
     ) {
-      return {
-        stage: parsed.stage === "submitted" ? "submitted" : "answering",
-        ratings: parsed.ratings,
-        attempts: parsed.attempts,
-      };
+      return null;
     }
+
+    const claims: ClaimState[] = [];
+
+    for (const [index, saved] of parsed.claims.entries()) {
+      if (
+        typeof saved !== "object" ||
+        saved === null ||
+        !("ratings" in saved) ||
+        typeof saved.ratings !== "object" ||
+        saved.ratings === null ||
+        Array.isArray(saved.ratings) ||
+        !("attempts" in saved) ||
+        typeof saved.attempts !== "number" ||
+        !Number.isSafeInteger(saved.attempts) ||
+        saved.attempts < 0 ||
+        !("stage" in saved) ||
+        (saved.stage !== "answering" &&
+          saved.stage !== "submitted")
+      ) {
+        return null;
+      }
+
+      const ratings = saved.ratings as Record<string, unknown>;
+      const evidence = config.claims[index]!.evidence;
+      const validIds = new Set(config.ratings.map((rating) => rating.id));
+
+      if (
+        Object.entries(ratings).some(
+          ([key, value]) =>
+            !/^(0|[1-9]\d*)$/.test(key) ||
+            Number(key) >= evidence.length ||
+            typeof value !== "string" ||
+            !validIds.has(value),
+        )
+      ) {
+        return null;
+      }
+
+      if (
+        saved.stage === "submitted" &&
+        evidence.some((_, evidenceIndex) => ratings[evidenceIndex] === undefined)
+      ) {
+        return null;
+      }
+
+      claims.push({
+        stage: saved.stage,
+        ratings: ratings as Record<number, string>,
+        attempts: saved.attempts,
+        solutionsRevealed:
+          "solutionsRevealed" in saved &&
+          saved.solutionsRevealed === true,
+      });
+    }
+
+    return { claims };
   } catch {
-    // Invalid save data
+    return null;
   }
-  return null;
 }
 
 export default Component;

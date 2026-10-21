@@ -1,7 +1,6 @@
 {
   "version": "1.0",
   "title": "Evaluating Evidence for Influenza",
-  "claim": "A patient has influenza.",
   "ratings": [
     {
       "id": "weak",
@@ -15,27 +14,46 @@
       "id": "strong",
       "label": "Strong"
     }
-  ],
-  "evidence": [
+  ],"claims": [
     {
-      "text": "The patient has a fever, cough, and muscle aches.",
-      "expectedRating": "moderate",
-      "feedback": "These symptoms are consistent with influenza, but several other illnesses can cause similar symptoms."
+      "claim": "A patient has influenza.",
+      "evidence": [
+        {
+          "text": "The patient has a fever, cough, and muscle aches.",
+          "expectedRating": "moderate",
+          "feedback": "These symptoms are consistent with influenza, but several other illnesses can cause similar symptoms."
+        },
+        {
+          "text": "The patient has a positive influenza PCR test.",
+          "expectedRating": "strong",
+          "feedback": "A positive molecular test provides strong evidence of influenza infection."
+        },
+        {
+          "text": "The patient reports feeling tired after a long day at work.",
+          "expectedRating": "weak",
+          "feedback": "Fatigue alone is nonspecific and provides little evidence for influenza."
+        },
+        {
+          "text": "Several coworkers have recently been diagnosed with influenza.",
+          "expectedRating": "moderate",
+          "feedback": "Recent exposure increases the likelihood of influenza but does not confirm infection."
+        }
+      ]
     },
     {
-      "text": "The patient has a positive influenza PCR test.",
-      "expectedRating": "strong",
-      "feedback": "A positive molecular test provides strong evidence of influenza infection."
-    },
-    {
-      "text": "The patient reports feeling tired after a long day at work.",
-      "expectedRating": "weak",
-      "feedback": "Fatigue alone is nonspecific and provides little evidence for influenza."
-    },
-    {
-      "text": "Several coworkers have recently been diagnosed with influenza.",
-      "expectedRating": "moderate",
-      "feedback": "Recent exposure increases the likelihood of influenza but does not confirm infection."
+      "claim": "The patient may have been exposed to influenza recently.",
+      "evidence": [
+        {
+          "text": "Several coworkers have recently been diagnosed with influenza.",
+          "expectedRating": "strong",
+          "feedback": "Recent cases among coworkers provide strong evidence of a possible exposure, although they do not establish infection."
+        },
+        {
+          "text": "The patient reports feeling tired after a long day at work.",
+          "expectedRating": "weak",
+          "feedback": "Fatigue does not indicate whether exposure to influenza occurred."
+        }
+      ]
     }
   ],
   "behaviour": {
