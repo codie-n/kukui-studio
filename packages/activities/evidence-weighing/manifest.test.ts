@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { activity } from "./manifest.js";
 
-describe("multiple-choice manifest", () => {
-  it("has kind 'multiple-choice'", () => {
-    expect(activity.kind).toBe("multiple-choice");
+describe("evidence-weighing manifest", () => {
+  it("has kind 'evidence-weighing'", () => {
+    expect(activity.kind).toBe("evidence-weighing");
   });
 
   it("starter validates against the schema", () => {
@@ -13,6 +13,6 @@ describe("multiple-choice manifest", () => {
 
   it("appears in @kukui/activities ACTIVITY_MANIFESTS", async () => {
     const { ACTIVITY_MANIFESTS } = await import("../src/index.js");
-    expect(ACTIVITY_MANIFESTS["multiple-choice"]).toBe(activity);
+    expect(ACTIVITY_MANIFESTS["evidence-weighing"]).toBe(activity);
   });
 });
