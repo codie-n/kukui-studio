@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import starter from "./starter.js";
-import { MultipleChoiceConfigSchema } from "./schema.js";
+import { EvidenceWeighingConfigSchema } from "./schema.js";
 
-describe("multiple-choice starter", () => {
+describe("evidence-weighing starter", () => {
   it("validates against the schema", () => {
-    const result = MultipleChoiceConfigSchema.safeParse(starter);
+    const result = EvidenceWeighingConfigSchema.safeParse(starter);
     if (!result.success) {
       console.error("starter failed validation:", JSON.stringify(result.error.issues, null, 2));
     }
