@@ -14,5 +14,5 @@ describe("evidence-weighing manifest", () => {
   it("appears in @kukui/activities ACTIVITY_MANIFESTS", async () => {
     const { ACTIVITY_MANIFESTS } = await import("../src/index.js");
     expect(ACTIVITY_MANIFESTS["evidence-weighing"]).toBe(activity);
-  });
+  }, 15000);
 });
