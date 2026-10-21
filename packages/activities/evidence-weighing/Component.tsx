@@ -163,7 +163,7 @@ export function Component({
             <button
               type="button"
               className="kukui-ew__primary"
-              disabled={Object.keys(state.ratings).length === 0}
+              disabled={config.evidence.some((_, index) => state.ratings[index] === undefined)}
               onClick={submit}
             >
               {checkLabel}

@@ -1,7 +1,7 @@
 /*
- * Evidence Weighing — visual implementation of pattern A (inline-below feedback,
- * space reserved from initial render, opacity-only fade). Layout-stable:
- * borders are constant 2 px; only color and opacity change between states.
+ * Evidence Weighing activity styles.
+ * Includes evidence cards, rating options, feedback,
+ * scoring, and action buttons.
  */
 
 .kukui-ew {
@@ -49,71 +49,6 @@
   cursor: pointer;
 }
 
-.kukui-mc__answers {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm, 8px);
-}
-
-.kukui-mc__answer-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.kukui-mc__answer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-md, 12px);
-  width: 100%;
-  min-height: 48px;
-  padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
-  background: var(--color-surface, #ffffff);
-  border: 2px solid var(--color-border, #d1d7df);
-  border-radius: var(--radius-md, 8px);
-  text-align: left;
-  font-size: var(--font-size-answer, 15px);
-  color: var(--color-text-primary, #1c1e20);
-  transition:
-    background-color 150ms ease,
-    border-color 150ms ease;
-}
-
-.kukui-mc__answer:hover:not(:disabled):not(.is-selected) {
-  border-color: var(--color-border-hover, #adb6c0);
-}
-
-.kukui-mc__answer:disabled {
-  cursor: default;
-}
-
-.kukui-mc__answer.is-selected {
-  border-color: var(--color-primary, #4a7a5f);
-  background: var(--color-primary-soft);
-}
-
-.kukui-mc__answer.is-correct {
-  border-color: var(--color-success, #2e6e41);
-  background: var(--color-success-soft);
-  color: var(--color-text-primary);
-}
-
-.kukui-mc__answer.is-incorrect {
-  border-color: var(--color-error, #c34132);
-  background: var(--color-error-soft);
-  color: var(--color-text-primary);
-  opacity: 1;
-}
-
-.kukui-mc__answer.is-reveal {
-  border-color: var(--color-success, #2e6e41);
-  border-style: solid;
-}
-
 .kukui-ew__feedback {
   margin-top: var(--spacing-md, 12px);
   font-size: var(--font-size-meta, 13px);
@@ -125,23 +60,6 @@
   font-size: var(--font-size-meta, 13px);
   font-weight: 700;
   color: var(--color-success, #2e6e41);
-}
-
-/*
- * Feedback row — pattern A: always present at constant min-height so the
- * reveal does not reflow neighbours. Default opacity 0; .is-visible fades to 1.
- */
-.kukui-mc__feedback {
-  min-height: 28px;
-  opacity: 0;
-  font-size: var(--font-size-meta, 13px);
-  color: var(--color-text-secondary, #49515b);
-  padding: var(--spacing-xs, 4px) var(--spacing-lg, 16px) var(--spacing-sm, 8px);
-  transition: opacity 200ms ease;
-}
-
-.kukui-mc__feedback.is-visible {
-  opacity: 1;
 }
 
 .kukui-ew__actions {
@@ -193,13 +111,3 @@
   font-weight: 400;
   color: var(--color-text-secondary);
 }
-
-/*
-@media (prefers-reduced-motion: reduce) {
-  .kukui-mc__answer,
-  .kukui-mc__feedback,
-  .kukui-mc__tip {
-    transition: none;
-  }
-}
-*/
