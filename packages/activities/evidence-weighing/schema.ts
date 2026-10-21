@@ -15,26 +15,31 @@ export const EvidenceWeighingConfigSchema = z
     version: z.string().regex(versionRe),
     title: z.string().min(1),
     author: z.string().optional(),
-    claim: z.string().min(1),
     ratings: z
       .array(
-        z
-          .object({
-              id: z.string().min(1),
-              label: z.string().min(1),
-          })
-          .strict(),
+        z.object({
+          id: z.string().trim().min(1),
+          label: z.string().trim().min(1),
+        })
+        .strict(),
       )
       .min(2),
-    evidence: z
+    claims: z
       .array(
-        z
-          .object({
-            text: z.string().min(1),
-            expectedRating: z.string().min(1),
-            feedback: z.string().optional(),
-          })
-          .strict(),
+        z.object({
+          claim: z.string().min(1),
+          evidence: z
+            .array(
+              z.object({
+                text: z.string().min(1),
+                expectedRating: z.string().min(1),
+                feedback: z.string().optional(),
+              })
+              .strict(),
+            )
+            .min(1),
+        })
+        .strict(),
       )
       .min(1),
     behaviour: z
@@ -58,16 +63,46 @@ export const EvidenceWeighingConfigSchema = z
   })
   .strict()
   .superRefine((data, ctx) => {
-    const validRatings = new Set(data.ratings.map((rating) => rating.id));
+    // Check for duplicate rating IDs and labels
+    const ratingIds = new Set<string>();
+    const ratingLabels = new Set<string>();
 
-    data.evidence.forEach((item, index) => {
-      if (!validRatings.has(item.expectedRating)) {
+    data.ratings.forEach((rating, index) => {
+      const id = rating.id.trim();
+      const label = rating.label.trim().toLowerCase();
+
+      if (ratingIds.has(id)) {
         ctx.addIssue({
           code: "custom",
-          path: ["evidence", index, "expectedRating"],
-          message: "Expected rating must match a defined rating",
+          path: ["ratings", index, "id"],
+          message: "Rating IDs must be unique",
         });
       }
+      if (ratingLabels.has(label)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["ratings", index, "label"],
+          message: "Rating labels must be unique",
+        })
+      }
+
+      ratingIds.add(id);
+      ratingLabels.add(label);
+    });
+
+    // Check that each evidence item references a defined rating
+    const validRatings = new Set(data.ratings.map((rating) => rating.id));
+
+    data.claims.forEach((claim, claimIndex) => {
+      claim.evidence.forEach((item, evidenceIndex) => {
+        if (!validRatings.has(item.expectedRating)) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["claims", claimIndex, "evidence", evidenceIndex, "expectedRating"],
+            message: "Expected rating must match a defined rating",
+          });
+        }
+      });
     });
   });
 

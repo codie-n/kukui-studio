@@ -58,17 +58,12 @@ const BEHAVIOUR_SHOW_SOLUTION = HIDDEN;
 
 const uiSchema = {
   ...COMMON,
-  "ui:order": ["title", "claim", "ratings", "evidence", "behaviour", "ui", "overallFeedback", "*"],
+  "ui:order": ["title", "ratings", "claims", "behaviour", "ui", "overallFeedback", "*"],
   title: TITLE,
   author: AUTHOR,
-  claim: f(
-    "Claim, hypothesis, or diagnosis",
-    "The statement learners will use to evaluate evidence.",
-    { "ui:widget": "html", "ui:options": { rows: 3 } },
-  ),
   ratings: {
     "ui:title": "Rating scale",
-    "ui:help": "Define the ratings learners will assign to each piece of evidence",
+    "ui:help": "Define the ratings learners will assign to each piece of evidence.",
     items: {
       id: f(
         "Rating ID",
@@ -80,24 +75,35 @@ const uiSchema = {
       ),
     },
   },
-  evidence: {
-    "ui:title": "Evidence items",
-    "ui:help": "Add evidence statements and specify their expected ratings.",
+  claims: {
+    "ui:title": "Claims",
+    "ui:help": "Add claims and define evidence for each claim.",
     items: {
-      text: f(
-        "Evidence text", 
-        "Evidence statement shown to learners.",
-        { "ui:widget": "textarea", "ui:options": { rows: 2 } },
+      claim: f(
+        "Claim, hypothesis, or diagnosis",
+        "The statement learners will use to evaluate evidence.",
+        { "ui:widget": "html", "ui:options": { rows: 3 } },
       ),
-      expectedRating: f(
-        "Expected rating ID",
-        "Enter the ID of one of the ratings defined above, such as 'weak' or 'strong'.",
-      ),
-      feedback: f(
-        "Feedback after submit",
-        "Optional feedback shown after the learner checks their answers.",
-        { "ui:widget": "textarea", "ui:options": { rows: 2 } },
-      ),
+      evidence: {
+        "ui:title": "Evidence items",
+        "ui:help": "Add evidence statements and specify their expected ratings.",
+        items: {
+          text: f(
+            "Evidence text", 
+            "Evidence statement shown to learners.",
+            { "ui:widget": "textarea", "ui:options": { rows: 2 } },
+          ),
+          expectedRating: f(
+            "Expected rating ID",
+            "Enter the ID of one of the ratings defined above, such as 'weak' or 'strong'.",
+          ),
+          feedback: f(
+            "Feedback after submit",
+            "Optional feedback shown after the learner checks their answers.",
+            { "ui:widget": "textarea", "ui:options": { rows: 2 } },
+          ),
+        },
+      },
     },
   },
   behaviour: {

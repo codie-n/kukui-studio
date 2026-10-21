@@ -5,15 +5,20 @@
 const starter = {
   version: "1.0",
   title: "Evidence Weighing",
-  claim: "Replace this with your claim, hypothesis, or diagnosis.",
   ratings: [
     { id: "weak", label: "Weak" },
     { id: "moderate", label: "Moderate" },
     { id: "strong", label: "Strong" },
   ],
-  evidence: [
-    { text: "Evidence A", expectedRating: "weak" },
-    { text: "Evidence B", expectedRating: "strong" },
+  claims: [
+    {
+      claim: "Replace this with your claim, hypothesis, or diagnosis.",
+      evidence: [
+        { text: "Evidence A", expectedRating: "weak" },
+        { text: "Evidence B", expectedRating: "moderate" },
+        { text: "Evidence B", expectedRating: "strong" },
+      ],
+    },
   ],
   behaviour: { enableRetry: true, enableSolutionsButton: true },
 };
