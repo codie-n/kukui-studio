@@ -47,6 +47,8 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
+  min-height: 44px;
+  padding: var(--spacing-md, 12px) var(--spacing-lg, 16px);
 }
 
 .kukui-ew__feedback {

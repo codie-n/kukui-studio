@@ -17,7 +17,7 @@
   ],
   "claims": [
     {
-      "claim": "A plant is activelyperforming photosynthesis.",
+      "claim": "A plant is actively performing photosynthesis.",
       "evidence": [
         {
           "text": "The plant has green leaves containing chlorophyll.",

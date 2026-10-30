@@ -96,6 +96,7 @@ const uiSchema = {
           expectedRating: f(
             "Expected rating ID",
             "Enter the ID of one of the ratings defined above, such as 'weak' or 'strong'.",
+            { "ui:widget": "select" },
           ),
           feedback: f(
             "Feedback after submit",

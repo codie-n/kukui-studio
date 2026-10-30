@@ -183,6 +183,10 @@ export function Component({
   const solutionLabel = ui.showSolutionButton ?? "Show solution";
   const tryAgainLabel = ui.tryAgainButton ?? "Try again";
 
+  const claimHeadingLevel = Math.min(headingLevel + 1, 6);
+  const ClaimHeading = `h${claimHeadingLevel}` as
+  keyof Pick<React.JSX.IntrinsicElements, "h1" | "h2" | "h3" | "h4" | "h5" | "h6">;
+
   return (
     <div className="kukui-ew">
       <article className="kukui-ew__card" aria-labelledby={headingId}>
@@ -192,10 +196,7 @@ export function Component({
           headingLevel={headingLevel}
           variant={config.appearance?.header ?? "full"}
         />
-        {/* Drop the radiogroup ARIA role — implementing it correctly requires
-            roving tabindex + arrow-key navigation, which we don't yet do.
-            A plain group with aria-pressed buttons gives accurate semantics. */}
-                {config.claims.map((claim, claimIndex) => {
+          {config.claims.map((claim, claimIndex) => {
           const claimState = state.claims[claimIndex] ?? initialClaimState();
           const score = claimScore(claim, claimState);
           const submitted = claimState.stage === "submitted";
@@ -217,9 +218,9 @@ export function Component({
               className="kukui-ew__claim"
               aria-labelledby={claimId}
             >
-              <h2 id={claimId}>
+              <ClaimHeading id={claimId}>
                 Claim {claimIndex + 1}
-              </h2>
+              </ClaimHeading>
 
               <SafeHtml html={claim.claim} />
 

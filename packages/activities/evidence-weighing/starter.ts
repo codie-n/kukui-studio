@@ -16,11 +16,12 @@ const starter = {
       evidence: [
         { text: "Evidence A", expectedRating: "weak" },
         { text: "Evidence B", expectedRating: "moderate" },
-        { text: "Evidence B", expectedRating: "strong" },
+        { text: "Evidence C", expectedRating: "strong" },
       ],
     },
   ],
   behaviour: { enableRetry: true, enableSolutionsButton: true },
+  appearance: { theme: "auto" },
 };
 
 export default starter;
