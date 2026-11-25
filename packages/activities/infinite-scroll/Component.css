@@ -22,19 +22,6 @@
   --kukui-card-pad: var(--spacing-3xl, 28px);
 }
 
-.kukui-is__counter {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-md, 12px);
-}
-
-.kukui-is_count {
-  font-size: 36px;
-  font-weight: 700;
-  color: var(--color-text-primary, #1c1e20);
-}
-
 .kukui-is__button {
   min-height: 44px;
   padding: 10px 20px;
@@ -61,3 +48,68 @@
   font-size: var(--font-size-meta, 13px);
 }
 
+.kukui-is__composer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-block: 1rem;
+}
+
+.kukui-is__composer label {
+  font-weight: 600;
+}
+
+.kukui-is__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+}
+
+.kukui-is__textarea:disabled {
+  opacity: 0.6;
+}
+
+.kukui-is__composer .kukui-is__button {
+  align-self: flex-end;
+}
+
+.kukui-is__feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.kukui-is__post {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+}
+
+.kukui-is__post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.kukui-is__post-header span {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.kukui-is__post-text {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

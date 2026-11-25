@@ -2,11 +2,18 @@ import { useEffect, useId, useState } from "react";
 import type { InfiniteScrollConfig } from "@kukui/schemas";
 import type { ActivityProps } from "@kukui/core/types";
 import { ActivityHeader } from "@kukui/core";
-import { doc, onSnapshot, updateDoc, increment } from "firebase/firestore";
-import { db, authenticate } from "./firebase.js";
+import { collection, onSnapshot, addDoc, query, orderBy, serverTimestamp, type Timestamp } from "firebase/firestore";
+import { db, auth, authenticate } from "./firebase.js";
 import "./Component.css";
 
-const counterRef = doc(db, "prototype", "counter");
+const postsRef = collection(db, "posts");
+
+type Posts = {
+  id: string;
+  text: string;
+  authorId: string;
+  createdAt: Timestamp | null;
+}
 
 export function Component({
   config,
@@ -14,10 +21,11 @@ export function Component({
 }: ActivityProps<InfiniteScrollConfig>) {
   const headingId = useId();
 
-  const [count, setCount] = useState<number | null>(null);
+  const [posts, setPosts] = useState<Posts[]>([]);
+  const [postText, setPostText] = useState("");
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState("");
-  const [updating, setUpdating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -29,18 +37,25 @@ export function Component({
 
         if (cancelled) return;
 
+        const postsQuery = query(
+          postsRef,
+          orderBy("createdAt", "desc")
+        );
+
         unsubscribe = onSnapshot(
-          counterRef,
+          postsQuery,
           { includeMetadataChanges: true },
           (snapshot) => {
-            if (snapshot.exists()) {
-              setCount(snapshot.data().count);
-              setConnected(!snapshot.metadata.fromCache);
-              setError("");
-            } else {
-              setConnected(false);
-              setError("Counter document not found.");
-            }
+            const retrievedPosts: Posts[] = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              text: doc.data().text,
+              authorId: doc.data().authorId,
+              createdAt: doc.data().createdAt,
+            }));
+
+            setPosts(retrievedPosts);
+            setConnected(!snapshot.metadata.fromCache);
+            setError("");
           },
           (err) => {
             setConnected(false);
@@ -64,20 +79,29 @@ export function Component({
     };
   }, []);
 
-  async function incrementCounter() {
-    setUpdating(true);
+  async function submitPost() {
+    const text = postText.trim();
+    const user = auth.currentUser;
+
+    if (!text || text.length > 2000 || !user || submitting) return;
+
+    setSubmitting(true);
     setError("");
 
     try {
-      await updateDoc(counterRef, {
-        count: increment(1),
+      await addDoc(postsRef, {
+        text: text,
+        authorId: user.uid,
+        createdAt: serverTimestamp(),
       });
+
+      setPostText("");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : String(err)
       );
     } finally {
-      setUpdating(false);
+      setSubmitting(false);
     }
   }
 
@@ -98,20 +122,29 @@ export function Component({
           : "Waiting for Firebase..."}
         </p>
 
-        <div className="kukui-is__counter">
-          <p>Shared Counter</p>
+        <div className="kukui-is__composer">
+          <label htmlFor={`${headingId}-post`}>
+            Create a post
+          </label>
 
-          <output className="kukui-is__count">
-            {count ?? "—"}
-          </output>
+          <textarea 
+            id={`${headingId}-post`}
+            className="kukui-is__textarea"
+            value={postText}
+            onChange={(e) => setPostText(e.target.value)}
+            placeholder="Share your thoughts"
+            maxLength={2000}
+            rows={4}
+            disabled={!connected || submitting}
+          />
 
           <button
             type="button"
             className="kukui-is__button"
-            disabled={!connected || updating}
-            onClick={incrementCounter}
+            disabled={!connected || submitting || !postText.trim()}
+            onClick={submitPost}
           >
-            {updating ? "Updating..." : "Increment (+1)"}
+            {submitting ? "Submitting..." : "Submit Post"}
           </button>
         </div>
 
@@ -120,6 +153,30 @@ export function Component({
             {error}
           </p>
         )}
+
+        <div className="kukui-is__feed">
+          {connected && posts.length === 0 && (
+            <p>No posts yet</p>
+          )}
+
+          {posts.map((post) => (
+            <article key={post.id} className="kukui-is__post">
+              <div className="kukui-is__post-header">
+                <strong>
+                  {post.authorId === auth.currentUser?.uid ? "You" : "Anonymous Student"}
+                </strong>
+
+                <span>
+                  {post.createdAt ? post.createdAt.toDate().toLocaleString() : "Sending..."}
+                </span>
+              </div>
+
+              <p className="kukui-is__post-text">
+                {post.text}
+              </p>
+            </article>
+          ))}
+        </div>
 
       </article>
     </div>
