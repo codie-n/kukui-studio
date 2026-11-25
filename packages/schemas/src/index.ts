@@ -3,6 +3,10 @@ export {
   type MultipleChoiceConfig,
 } from "@kukui/activities/multiple-choice/schema";
 export {
+  InfiniteScrollConfigSchema,
+  type InfiniteScrollConfig,
+} from "@kukui/activities/infinite-scroll/schema";
+export {
   FillInTheBlanksConfigSchema,
   type FillInTheBlanksConfig,
   parseClozeText,

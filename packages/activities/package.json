@@ -40,6 +40,8 @@
     "./image-annotation/schema": "./image-annotation/schema.ts",
     "./image-comparison-slider/Component": "./image-comparison-slider/Component.tsx",
     "./image-comparison-slider/schema": "./image-comparison-slider/schema.ts",
+    "./infinite-scroll/Component": "./infinite-scroll/Component.tsx",
+    "./infinite-scroll/schema": "./infinite-scroll/schema.ts",
     "./interactive-video/Component": "./interactive-video/Component.tsx",
     "./interactive-video/schema": "./interactive-video/schema.ts",
     "./isometric-chatroom/Component": "./isometric-chatroom/Component.tsx",
@@ -81,6 +83,7 @@
     "@kukui/schemas": "workspace:*",
     "@react-three/drei": "^10.0.0",
     "@react-three/fiber": "^9.0.0",
+    "firebase": "^13.4.0",
     "react": "^19.0.0",
     "three": "^0.171.0",
     "zod": "^4.0.0"

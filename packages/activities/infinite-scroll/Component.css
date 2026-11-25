@@ -1,0 +1,63 @@
+/*
+ * Multiple Choice — visual implementation of pattern A (inline-below feedback,
+ * space reserved from initial render, opacity-only fade). Layout-stable:
+ * borders are constant 2 px; only color and opacity change between states.
+ */
+
+.kukui-is {
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-2xl, 24px);
+}
+
+.kukui-is__card {
+  width: 100%;
+  max-width: 720px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #d1d7df);
+  border-radius: var(--radius-card, 12px);
+  padding: var(--spacing-3xl, 28px);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  --kukui-card-pad: var(--spacing-3xl, 28px);
+}
+
+.kukui-is__counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md, 12px);
+}
+
+.kukui-is_count {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--color-text-primary, #1c1e20);
+}
+
+.kukui-is__button {
+  min-height: 44px;
+  padding: 10px 20px;
+  background: var(--color-primary, #4a7a5f);
+  color: var(--color-on-primary, #ffffff);
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--font-size-answer, 15px);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.kukui-is__button:hover:not(:disabled) {
+  background: var(--color-primary-hover, #3f6b52);
+}
+
+.kukui-is__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.kukui-is__error {
+  color: var(--color-error, #c34132);
+  font-size: var(--font-size-meta, 13px);
+}
+
